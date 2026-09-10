@@ -9,61 +9,172 @@ Status: initial project architecture.
 - Persistent memory and relationship state without requiring the language model to remember everything in context.
 - Time-aware behavior driven by device time and stored interaction timestamps.
 - Small on-device model with training performed from original safetensors checkpoints and Android inference from quantized deployment artifacts.
+- Event-driven inference: deterministic tools stay available without keeping the language model resident in memory.
 
 ## Runtime architecture
 
 ```text
-User message
-    |
-    v
-Chat UI (Jetpack Compose)
+User / Android event
     |
     v
 Conversation Orchestrator
     |
-    +--> Time Context
-    |     - current local time
-    |     - previous user message time
-    |     - inactivity duration
-    |     - daypart / day transition
-    |
+    +--> Deterministic Router
+    |      |
+    |      +--> Time / date / elapsed-gap calculation
+    |      +--> SQLite / Room reads and writes
+    |      +--> Emotion-state arithmetic
+    |      +--> Relationship-state arithmetic
+    |      +--> Exact memory lookup / metadata
+    |      +--> Formatting / simple templates
+    |      +--> Bounded local tools and scripts
+    |      |
+    |      +--> sufficient result? --> respond / persist without LLM
+    |                                |
+    |                                no
+    |                                v
     +--> Persona Core
-    |     - stable identity
-    |     - speaking style
-    |     - values / boundaries
-    |
     +--> Relationship State
-    |     - familiarity
-    |     - trust
-    |     - affection
-    |     - unresolved interaction flags
-    |
     +--> Emotion Engine
-    |     - happiness
-    |     - irritation
-    |     - sadness
-    |     - energy
-    |     - temporary mood
-    |
     +--> Memory Retrieval
-    |     - relevant facts
-    |     - recent events
-    |     - emotional memories
-    |
-    v
-Prompt Builder
-    |
-    v
-Inference Runtime
-llama.cpp JNI + GGUF Q4
-    |
-    v
-Generated response
-    |
-    +--> memory candidate extraction
-    +--> deterministic state update
-    +--> persist conversation metadata
+    +--> Time Context
+            |
+            v
+       Prompt Builder
+            |
+            v
+       Model Manager
+       load on demand
+            |
+            v
+       llama.cpp JNI + GGUF Q4
+            |
+            v
+       Generated response
+            |
+            +--> persist conversation metadata
+            +--> deterministic state update
+            +--> memory candidate pipeline
+            |
+            v
+       idle grace period
+            |
+            v
+       unload model/context
 ```
+
+The application may stay alive according to normal Android lifecycle rules, but the LLM must not remain resident simply to service deterministic tools.
+
+## Deterministic-first policy
+
+Use Kotlin/native code or bounded scripts for tasks whose correct result can be computed directly.
+
+Examples that must not require the model:
+
+```text
+get_current_time()
+get_current_date()
+calculate_elapsed_time()
+classify_daypart()
+read_last_message_timestamp()
+update_numeric_emotion_state()
+read/write Room records
+exact memory lookup
+session bookkeeping
+simple notification metadata
+health/runtime counters
+```
+
+A simple user request may also be answered without loading the model when a deterministic response remains natural enough. Persona-aware response templates may use current state, but must remain bounded and non-deceptive.
+
+Examples:
+
+```text
+"jam berapa?"
+  -> Android clock
+  -> optional bounded persona template
+  -> no model load required
+
+"berapa lama aku nggak chat?"
+  -> stored timestamp + clock arithmetic
+  -> no model load required
+```
+
+Invoke the language model when at least one is true:
+
+- free-form conversational response is required;
+- persona expression needs natural variation beyond a bounded template;
+- user intent is materially ambiguous;
+- relevant retrieved memories must be synthesized into a natural reply;
+- emotional/relationship context must be expressed conversationally;
+- a benchmark explicitly targets model behavior.
+
+Do not use the LLM as a calculator, clock, database, state machine, scheduler, or generic wrapper around deterministic APIs.
+
+## Model lifecycle
+
+The model manager has explicit states:
+
+```text
+UNLOADED
+   |
+   | conversational request
+   v
+LOADING
+   |
+   v
+READY
+   |
+   +--> GENERATING
+   |       |
+   |       v
+   |     READY
+   |
+   +--> idle grace period expires
+           |
+           v
+       UNLOADING
+           |
+           v
+       UNLOADED
+```
+
+Initial policy:
+
+- cold start with model `UNLOADED`;
+- load only on conversational/model-required requests;
+- keep a configurable short idle grace period after generation so a rapid follow-up does not reload immediately;
+- never keep the model resident because of background bookkeeping;
+- unload inference context after the grace period;
+- persist persona, relationship, emotion, memory, and time state outside model memory;
+- Android process death must not lose authoritative state.
+
+The idle grace period is not a permanent magic number. Benchmark at least `0s`, `30s`, `60s`, and `120s` on the Infinix Hot 30 and record:
+
+- reload latency;
+- peak PSS/RSS;
+- battery cost;
+- temperature;
+- rapid multi-turn UX;
+- Android LMKD/process survival behavior.
+
+The selected default must come from device evidence.
+
+## Background behavior
+
+Background jobs may perform deterministic work such as:
+
+```text
+time/event bookkeeping
+state decay
+SQLite maintenance
+notification scheduling metadata
+benchmark/evidence bookkeeping
+```
+
+They must not wake or keep the LLM loaded merely to maintain the illusion of continuous thought.
+
+If a future feature needs a proactive natural-language message, the deterministic scheduler creates an event first. The model may be loaded only at the actual generation boundary, subject to Android background-execution constraints and product policy.
 
 ## Time awareness
 
@@ -146,7 +257,7 @@ Possible style outcome:
 "kamu habis dari mana, dari pagi nggak ngabarin aku?"
 ```
 
-The wording must be generated, not hard-coded, to avoid repetitive NPC behavior.
+The wording should normally be generated when a conversational turn already requires the model. Deterministic templates may be used for simple tool-only responses, but must avoid repetitive NPC behavior.
 
 ## Time-behavior safeguards
 
@@ -198,7 +309,7 @@ Room tables should eventually separate:
 
 Do not store private chat content in Git or CI artifacts.
 
-## Model lifecycle
+## Training and deployment lifecycle
 
 ```text
 Hugging Face safetensors
