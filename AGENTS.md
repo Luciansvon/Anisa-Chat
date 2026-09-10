@@ -26,7 +26,12 @@ Anisa-Chat is a project repository consuming B.I.M.A-DEV-INFRA conventions. Keep
 - Changes to model/runtime require device benchmark evidence.
 - Hardware claims for Android must identify the real tested device.
 - Infinix Hot 30 is the initial low-end performance reference, not a universal performance claim.
-- Prefer deterministic logic for state transitions and storage before adding another model.
+- Prefer deterministic logic for state transitions, time, storage, retrieval, formatting, and simple tool execution before invoking a model.
+- The model must not remain loaded merely to serve deterministic tools or background bookkeeping.
+- Simple actions must use Kotlin/native code or bounded scripts; do not route them through the LLM for convenience.
+- Load the model only when natural-language generation, ambiguity resolution, or model-specific reasoning is required.
+- After an idle grace period, unload the model and release inference context; the grace period is configurable and must be benchmarked on target hardware.
+- Background jobs must not keep the model resident. They may persist deterministic events/state that are consumed on the next conversational wake.
 - Keep JNI narrow. Kotlin/domain code must not depend directly on llama.cpp internals.
 - Destructive user-data operations are out of scope for the chatbot core.
 
@@ -55,6 +60,9 @@ At minimum record:
 - TTFT
 - generation speed
 - peak memory
+- model load time
+- unload/reload time
+- idle grace period
 - failure/crash state
 - persona/emotion/memory benchmark scores
 
