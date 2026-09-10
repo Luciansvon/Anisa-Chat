@@ -27,7 +27,16 @@ class InMemoryMemoryRepository(
         }
     }
 
-    override suspend fun search(query: String, limit: Int): List<MemoryItem> {
+    override suspend fun search(query: String, limit: Int): List<MemoryItem> =
+        LexicalMemorySearch.rank(items, query, limit)
+}
+
+internal object LexicalMemorySearch {
+    fun rank(
+        items: Iterable<MemoryItem>,
+        query: String,
+        limit: Int,
+    ): List<MemoryItem> {
         if (query.isBlank() || limit <= 0) return emptyList()
         val queryTokens = tokens(query)
         if (queryTokens.isEmpty()) return emptyList()
