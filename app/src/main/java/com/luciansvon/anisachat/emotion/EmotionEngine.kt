@@ -77,8 +77,7 @@ class EmotionEngine {
             }
 
             InteractionEvent.ClockAdjusted,
-            InteractionEvent.None,
-            -> {
+            InteractionEvent.None -> {
                 nextEmotion = decay(emotion)
                 nextRelationship = relationship
             }
