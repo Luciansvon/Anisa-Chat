@@ -58,3 +58,7 @@ reports/local/
 .DS_Store
 Thumbs.db
 .vscode/
+__pycache__/
+*.pyc
+tools/telegram_offset.json
+reports/telegram_telemetry.jsonl

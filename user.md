@@ -85,7 +85,18 @@ Desain mengusung tema **Warm Editorial / Japanese Cozy Minimalist**:
    - Sentuhan font bergaya Serif untuk kutipan dan nuansa puitis/hangat.
    - Font Sans-serif yang bersih dan mudah dibaca untuk isi pesan teks dan navigasi.
 3. **4 Layar Utama**:
-   - **Layar Percakapan (Chat)**: Gelembung pesan terpisah, avatar Anisa dengan status "here", indikator sedang mengetik, pembatas waktu jeda ("—— 8 jam kemudian ——"), serta bilah input pesan yang rapi.
-   - **Layar Memori (Memory)**: Kartu ringkasan hal-hal yang diingat Anisa (kategori kuliah, proyek, kebiasaan/kopi, kondisi terkini) lengkap dengan tanggal diingat.
-   - **Layar Karakter (Character)**: Foto profil besar, status suasana hati (*mood*), kutipan hangat, ringkasan kebersamaan (jumlah memori, hari bersama, mood), serta deskripsi kepribadian Anisa.
-   - **Layar Pengaturan (Settings)**: Menu rapi terbagi per kategori (Anisa, Model, Chat, Privacy, Developer) dengan sakelar toggle yang jelas.
+    - **Layar Percakapan (Chat)**: Gelembung pesan terpisah, avatar Anisa dengan status "here", indikator sedang mengetik, pembatas waktu jeda ("—— 8 jam kemudian ——"), serta bilah input pesan yang rapi.
+    - **Layar Memori (Memory)**: Kartu ringkasan hal-hal yang diingat Anisa (kategori kuliah, proyek, kebiasaan/kopi, kondisi terkini) lengkap dengan tanggal diingat.
+    - **Layar Karakter (Character)**: Foto profil besar, status suasana hati (*mood*), kutipan hangat, ringkasan kebersamaan (jumlah memori, hari bersama, mood), serta deskripsi kepribadian Anisa.
+    - **Layar Pengaturan (Settings)**: Menu rapi terbagi per kategori (Anisa, Model, Chat, Privacy, Developer) dengan sakelar toggle yang jelas.
+
+---
+
+## Integrasi Jembatan Telegram Antigravity (Komunikasi Langsung Mas Bima)
+- **Kebutuhan Mas Bima**: Mas Bima ingin dapat terhubung dan mengobrol langsung dengan Antigravity via aplikasi Telegram di HP saat sedang tidak di depan laptop atau saat beraktivitas di luar.
+- **Referensi Skrip**: Mengacu pada `antigravity_telegram_bridge.py` yang sebelumnya dirancang di proyek ClawFile (`FolderVisionAI-FileID/clawfile-training/scripts/antigravity_telegram_bridge.py`) dan kini dipasang juga di `Anisa-chat` (`tools/antigravity_bridge.py`).
+- **Bot yang Terhubung**:
+  - `@Anisa_chat_bot` (Token dari `.env` Anisa-Chat)
+  - `@Anisa_Bima_bot` (Token sekunder)
+- **Identitas Telegram Pengguna**: ID `5497600429`, Nama Tampilan `BuBaCo`.
+- **Arsitektur Jembatan**: Ditenagai oleh Gemini 2.5 Flash via OpenRouter (menggunakan `OPENROUTER_API_KEY` dari environment). Pendekatan ini memakai 0 MB memori kartu grafis (VRAM GPU), sehingga proses pelatihan model lokal di GPU laptop tetap berjalan 100% lancar tanpa takut kehabisan memori.

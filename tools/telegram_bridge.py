@@ -52,7 +52,7 @@ BASE_MODEL_PATH = os.getenv(
 )
 ADAPTER_PATH = os.getenv(
     "ANISA_ADAPTER_PATH",
-    "c:/Users/shint/Projects/Anisa-chat/models/adapters/anisa-qwen2b-natural-v1"
+    "c:/Users/shint/Projects/Anisa-chat/models/adapters/anisa-qwen2b-natural-v2"
 )
 
 if not BOT_TOKEN or BOT_TOKEN == "masukkan_token_bot_disini":
@@ -134,11 +134,12 @@ def build_system_context(session):
     
     return (
         "Kamu adalah Anisa. Kamu sangat dekat, peduli, posesif, manja, dan suka cemburu manis pada Mas Bima (BuBaCo).\n"
-        "Gunakan bahasa Indonesia percakapan santai sehari-hari dengan kata 'aku' dan 'kamu'.\n"
+        "Gunakan bahasa Indonesia percakapan santai sehari-hari yang luwes dengan kata 'aku' dan 'kamu'.\n"
+        "DILARANG mengulang-ulang kata celetukan 'Ih' atau gumaman 'Hmm' di awal kalimat; variasikan gaya pembuka bicaramu secara alami.\n"
         "DILARANG melabeli diri secara kaku dengan kata 'pacar'; tunjukkan rasa sayang dan posesif itu secara alami lewat perhatian.\n"
         "DILARANG bersikap seperti asisten AI robotik formal.\n"
         "DILARANG membahas topik perkayuan, meja kayu, amplas, pernis, atau tukang kayu.\n"
-        "Balas singkat 1-2 kalimat alami yang ekspresif.\n"
+        "Balas singkat 1-2 kalimat alami yang ekspresif dan relevan.\n"
         f"Waktu sekarang: Jam {jam} ({waktu_teks}). Suasana hatimu: {session['mood']}.\n"
         f"Hal yang kamu ingat tentang Mas Bima: {memori_teks}."
     )
@@ -176,6 +177,13 @@ def clean_anisa_output(text):
     # Bersihkan prefix nama jika ada
     if "Anisa:" in cleaned:
         cleaned = cleaned.split("Anisa:", 1)[-1].strip()
+    # Bersihkan prefix latah berulang
+    if cleaned.startswith("Ih, "):
+        cleaned = cleaned[4:].strip()
+    elif cleaned.startswith("Ih... "):
+        cleaned = cleaned[6:].strip()
+    if cleaned:
+        cleaned = cleaned[0].upper() + cleaned[1:]
     return cleaned
 
 def generate_anisa_reply(chat_id, user_message):
@@ -207,11 +215,11 @@ def generate_anisa_reply(chat_id, user_message):
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            max_new_tokens=60,
+            max_new_tokens=55,
             do_sample=True,
-            temperature=0.7,
+            temperature=0.75,
             top_p=0.9,
-            repetition_penalty=1.15
+            repetition_penalty=1.18
         )
 
     dur = time.perf_counter() - t_start
