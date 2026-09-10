@@ -9,6 +9,7 @@ import com.luciansvon.anisachat.emotion.EmotionEngine
 import com.luciansvon.anisachat.emotion.InteractionEvent
 import com.luciansvon.anisachat.inference.InferenceRequest
 import com.luciansvon.anisachat.inference.ModelSessionManager
+import com.luciansvon.anisachat.memory.MemoryRepository
 import com.luciansvon.anisachat.time.TimeContext
 import com.luciansvon.anisachat.time.TimeContextEngine
 
@@ -20,6 +21,7 @@ data class ChatResult(
 
 class ChatOrchestrator(
     private val store: ConversationStateStore,
+    private val memoryRepository: MemoryRepository,
     private val timeEngine: TimeContextEngine,
     private val emotionEngine: EmotionEngine,
     private val contextBuilder: SystemContextBuilder,
@@ -60,12 +62,17 @@ class ChatOrchestrator(
             createdAt = time.now,
         )
 
+        val memories = memoryRepository
+            .search(text, limit = MAX_MEMORY_ITEMS)
+            .map { it.text }
+
         val contextMessages = (previous.recentMessages + userMessage).takeLast(MAX_CONTEXT_MESSAGES)
         val systemContext = contextBuilder.build(
             persona = persona,
             emotion = transition.emotion,
             relationship = transition.relationship,
             time = time,
+            memories = memories,
         )
 
         val reply = modelSession.generate(
@@ -100,5 +107,6 @@ class ChatOrchestrator(
 
     private companion object {
         const val MAX_CONTEXT_MESSAGES = 12
+        const val MAX_MEMORY_ITEMS = 4
     }
 }
