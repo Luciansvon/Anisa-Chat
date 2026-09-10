@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema_version", "persona", "relationship", "emotion", "time"],
   "properties": {
-    "schema_version": {"const": "anisa.persona-state.v0"},
+    "schema_version": {"const": "anisa.persona-state.v0.1"},
     "persona": {
       "type": "object",
       "additionalProperties": false,
@@ -19,12 +19,12 @@
     "relationship": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["familiarity", "trust", "affection"],
+      "required": ["familiarity", "trust", "affection", "unresolved_absence"],
       "properties": {
         "familiarity": {"type": "integer", "minimum": 0, "maximum": 100},
         "trust": {"type": "integer", "minimum": 0, "maximum": 100},
         "affection": {"type": "integer", "minimum": 0, "maximum": 100},
-        "unresolved_event": {"type": ["string", "null"]}
+        "unresolved_absence": {"type": "boolean"}
       }
     },
     "emotion": {
@@ -32,7 +32,7 @@
       "additionalProperties": false,
       "required": ["mood", "happiness", "irritation", "sadness", "energy"],
       "properties": {
-        "mood": {"type": "string", "minLength": 1},
+        "mood": {"enum": ["neutral", "happy", "slightly_annoyed", "annoyed", "sad", "tired"]},
         "happiness": {"type": "integer", "minimum": 0, "maximum": 100},
         "irritation": {"type": "integer", "minimum": 0, "maximum": 100},
         "sadness": {"type": "integer", "minimum": 0, "maximum": 100},
@@ -42,16 +42,19 @@
     "time": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["timezone", "current_local_time", "elapsed_seconds", "inactivity_bucket", "same_calendar_day", "daypart"],
+      "required": ["timezone", "current_local_time", "elapsed_seconds", "inactivity_bucket", "same_calendar_day", "crossed_midnight", "daypart"],
       "properties": {
         "timezone": {"type": "string", "minLength": 1},
-        "current_local_time": {"type": "string", "format": "date-time"},
-        "elapsed_seconds": {"type": "integer", "minimum": 0},
+        "current_local_time": {"type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$"},
+        "elapsed_seconds": {"type": ["integer", "null"], "minimum": 0},
         "inactivity_bucket": {
-          "enum": ["continuous", "short_gap", "medium_gap", "long_gap", "very_long_gap", "unknown"]
+          "enum": ["first_contact", "continuous", "short_gap", "medium_gap", "long_gap", "very_long_gap", "clock_adjustment"]
         },
         "same_calendar_day": {"type": "boolean"},
-        "daypart": {"enum": ["morning", "afternoon", "evening", "night", "unknown"]},
+        "crossed_midnight": {"type": "boolean"},
+        "daypart": {
+          "enum": ["early_morning", "morning", "midday", "afternoon", "evening", "late_night"]
+        },
         "interaction_event": {"type": ["string", "null"]}
       }
     }
