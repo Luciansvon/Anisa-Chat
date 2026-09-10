@@ -62,3 +62,6 @@ __pycache__/
 *.pyc
 tools/telegram_offset.json
 reports/telegram_telemetry.jsonl
+reports/telegram_bridge.log
+data/anisa_state.db
+data/*.db

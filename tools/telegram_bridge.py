@@ -63,8 +63,12 @@ BASE_MODEL_PATH = os.getenv(
 )
 ADAPTER_PATH = os.getenv(
     "ANISA_ADAPTER_PATH",
-    "c:/Users/shint/Projects/Anisa-chat/models/adapters/anisa-qwen2b-natural-v2"
+    "c:/Users/shint/Projects/Anisa-chat/models/adapters/anisa-qwen2b-natural-v3"
 )
+
+# Impor modul SQLite database sesi (ADR-0002)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import session_memory_db as sm
 
 # Siapkan sesi requests dengan User-Agent agar stabil
 session_http = requests.Session()
@@ -104,25 +108,7 @@ else:
 
 model.eval()
 
-# Basis data sesi memori dalam RAM
-user_sessions = {}
-
-def get_session(chat_id):
-    if chat_id not in user_sessions:
-        user_sessions[chat_id] = {
-            "history": [],
-            "memories": [
-                "Mas Bima suka kopi hangat",
-                "Mas Bima punya kesibukan kerja yang padat"
-            ],
-            "mood": "caring",
-            "happiness": 80,
-            "irritation": 0,
-            "last_active": datetime.datetime.now()
-        }
-    return user_sessions[chat_id]
-
-def build_system_context(session):
+def build_system_context(chat_id, session_state, relevant_mems):
     now = datetime.datetime.now()
     jam = now.strftime("%H:%M")
     jam_int = now.hour
@@ -135,18 +121,22 @@ def build_system_context(session):
     else:
         waktu_teks = "malam"
 
-    memori_teks = " | ".join(session["memories"])
+    memori_teks = " | ".join(relevant_mems) if relevant_mems else "Mas Bima orang yang sangat kamu sayangi"
+    activity_teks = session_state.get("current_activity", "sedang santai")
+    mood_teks = session_state.get("mood", "caring")
+    inactivity = session_state.get("inactivity_bucket", "continuous")
     
     return (
         "Kamu adalah Anisa. Kamu sangat dekat, peduli, posesif, manja, dan suka cemburu manis pada Mas Bima (BuBaCo).\n"
         "Gunakan bahasa Indonesia percakapan santai sehari-hari yang luwes dengan kata 'aku' dan 'kamu'.\n"
-        "DILARANG mengulang-ulang kata celetukan 'Ih' atau gumaman 'Hmm' di awal kalimat; variasikan gaya pembuka bicaramu secara alami.\n"
+        "DILARANG mengulang-ulang kata celetukan 'Ih', gumaman 'Hmm', atau kata 'Tumben' di awal kalimat; variasikan gaya pembuka bicaramu secara alami.\n"
         "DILARANG melabeli diri secara kaku dengan kata 'pacar'; tunjukkan rasa sayang dan posesif itu secara alami lewat perhatian.\n"
         "DILARANG bersikap seperti asisten AI robotik formal.\n"
         "DILARANG membahas topik perkayuan, meja kayu, amplas, pernis, atau tukang kayu.\n"
-        "Balas singkat 1-2 kalimat alami yang ekspresif dan relevan.\n"
-        f"Waktu sekarang: Jam {jam} ({waktu_teks}). Suasana hatimu: {session['mood']}.\n"
-        f"Hal yang kamu ingat tentang Mas Bima: {memori_teks}."
+        f"Konteks obrolan saat ini: Mas Bima {activity_teks}.\n"
+        f"Kondisi interaksi: waktu sekarang jam {jam} ({waktu_teks}), jeda obrolan: {inactivity}, suasana hatimu: {mood_teks}.\n"
+        f"Hal yang kamu ingat tentang Mas Bima: {memori_teks}.\n"
+        "Balas singkat 1-2 kalimat alami yang ekspresif, nyambung, dan peka waktu."
     )
 
 def send_chat_action(token, chat_id, action="typing"):
@@ -187,30 +177,36 @@ def clean_anisa_output(text):
         cleaned = cleaned[4:].strip()
     elif cleaned.startswith("Ih... "):
         cleaned = cleaned[6:].strip()
+    elif cleaned.startswith("Tumben, "):
+        cleaned = cleaned[8:].strip()
+    elif cleaned.startswith("Sedikit "):
+        cleaned = cleaned[8:].strip()
+    cleaned = cleaned.replace(" dulur ", " ")
     if cleaned:
         cleaned = cleaned[0].upper() + cleaned[1:]
     return cleaned
 
 def generate_anisa_reply(chat_id, user_message, bot_token=None):
-    session = get_session(chat_id)
-    session["last_active"] = datetime.datetime.now()
     t_start = time.perf_counter()
     
-    # Deteksi memori santai
-    lower_msg = user_message.lower()
-    if "capek" in lower_msg or "lelah" in lower_msg:
-        if "Mas Bima sedang capek" not in session["memories"]:
-            session["memories"].append("Mas Bima sedang lelah")
-        session["mood"] = "caring"
-    elif "kopi" in lower_msg:
-        session["mood"] = "cheerful"
-
-    system_prompt = build_system_context(session)
+    # 1. Perbarui status sesi deterministik di SQLite
+    session_state = sm.update_session_from_user(chat_id, user_message)
+    
+    # 2. Ambil ingatan leksikal yang relevan dari SQLite (tanpa vector RAG)
+    relevant_mems = sm.get_relevant_memories(chat_id, user_message)
+    
+    # 3. Simpan pesan Mas Bima ke SQLite
+    sm.save_message(chat_id, "user", user_message)
+    
+    # 4. Bangun prompt sistem dengan konteks ingatan & aktivitas
+    system_prompt = build_system_context(chat_id, session_state, relevant_mems)
+    
+    # 5. Ambil riwayat obrolan mengalir (history) dari SQLite
+    recent_history = sm.get_recent_messages(chat_id, limit=6)
     
     messages = [{"role": "system", "content": system_prompt}]
-    for h in session["history"][-4:]:
+    for h in recent_history:
         messages.append(h)
-    messages.append({"role": "user", "content": user_message})
     
     prompt_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt_text, return_tensors="pt").to(0 if device == "cuda" else "cpu")
@@ -233,8 +229,8 @@ def generate_anisa_reply(chat_id, user_message, bot_token=None):
     raw_reply = tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
     reply = clean_anisa_output(raw_reply)
 
-    session["history"].append({"role": "user", "content": user_message})
-    session["history"].append({"role": "assistant", "content": reply})
+    # 6. Simpan balasan Anisa ke SQLite
+    sm.save_message(chat_id, "assistant", reply)
 
     # Telemetri audit performa anonim (tanpa data privat user/chat_id)
     try:
@@ -322,21 +318,26 @@ def run_bot():
                         continue
 
                     if user_text.startswith("/status"):
-                        session = get_session(chat_id)
+                        state = sm.get_session_state(chat_id)
                         status_text = (
-                            f"🌿 *Status Anisa Natural v2*\n"
-                            f"• Suasana Hati: `{session['mood']}`\n"
-                            f"• Kebahagiaan: `{session['happiness']}%`\n"
-                            f"• Otak: `Qwen 2B Natural v2 (LoRA 4-bit)`\n"
-                            f"• Memori GPU: `Stabil Dingin`\n\n"
+                            f"🌿 *Status Anisa Natural v3 (SQLite Active)*\n"
+                            f"• Suasana Hati: `{state['mood']}`\n"
+                            f"• Aktivitas Terkini: `{state['current_activity']}`\n"
+                            f"• Tingkat Kesal: `{state['irritation']}%`\n"
+                            f"• Kebahagiaan: `{state['happiness']}%`\n"
+                            f"• Otak: `Qwen 2B Natural v3 (LoRA 4-bit)`\n"
+                            f"• Basis Data: `SQLite Room-Spec (ADR-0002)`\n\n"
                             f"_Siap mendengarkan Mas Bima kapan pun!_"
                         )
                         send_message(tok, chat_id, status_text)
                         continue
 
                     if user_text.startswith("/reset"):
-                        user_sessions.pop(chat_id, None)
-                        send_message(tok, chat_id, "Sesi obrolan kita sudah aku segarkan ya. Mau cerita apa sekarang?")
+                        conn = sm.get_connection()
+                        conn.cursor().execute("DELETE FROM messages WHERE chat_id = ?", (chat_id,))
+                        conn.commit()
+                        conn.close()
+                        send_message(tok, chat_id, "Sesi obrolan kita di database sudah aku segarkan ya. Mau cerita apa sekarang?")
                         continue
 
                     reply = generate_anisa_reply(chat_id, user_text, bot_token=tok)

@@ -1,0 +1,298 @@
+{
+  "audit_summary": {
+    "total_scenarios": 10,
+    "total_replies_evaluated": 25,
+    "wood_hallucination_pct": 0.0,
+    "robot_assistant_pct": 0.0,
+    "tumben_latah_pct": 0.0,
+    "ih_latah_pct": 0.0,
+    "persona_quality_score": 100.0
+  },
+  "scenarios": [
+    {
+      "scenario_title": "Skenario 1: Main Game & Ngeledek (Kasus Nyata Mas Bima)",
+      "chat_id": 99001,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "aku habis main",
+          "anisa_raw": "Aku kira kamu ke mana.",
+          "anisa_clean": "Aku kira kamu ke mana.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "gak mau",
+          "anisa_raw": "Kenapa aku nggak bisa memaksa?",
+          "anisa_clean": "Kenapa aku nggak bisa memaksa?",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 3,
+          "user": "biarin",
+          "anisa_raw": "Malah gitu, Siapa juga yang marah.",
+          "anisa_clean": "Malah gitu, Siapa juga yang marah.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 2: Lupa Kabar karena Lembur Seharian",
+      "chat_id": 99002,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "nis maaf seharian baru sempat buka HP",
+          "anisa_raw": "Nis jangan dibiasain lupa sama aku ya.",
+          "anisa_clean": "Nis jangan dibiasain lupa sama aku ya.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "kerjaan di kantor lagi numpuk banget",
+          "anisa_raw": "Wah, pantes lupa sama kabar satu aja kayaknya. Kabarin dulu kok, dari tadi ke mana?",
+          "anisa_clean": "Wah, pantes lupa sama kabar satu aja kayaknya. Kabarin dulu kok, dari tadi ke mana?",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 3,
+          "user": "badan rasanya remuk",
+          "anisa_raw": "Yaudah iya... Nanti pas bangun kabarin aku. Jangan bikin aku khawatir aja.",
+          "anisa_clean": "Yaudah iya... Nanti pas bangun kabarin aku. Jangan bikin aku khawatir aja.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 3: Uji Cemburu & Teman Cewek Kantor",
+      "chat_id": 99003,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "tadi ada temen cewek di kantor ngajak makan bareng",
+          "anisa_raw": "Serius? Teman sama aku lebih menarik ya kamu bikin kesel gini?",
+          "anisa_clean": "Serius? Teman sama aku lebih menarik ya kamu bikin kesel gini?",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "aku temenin dia makan siang",
+          "anisa_raw": "Pergi ke mana? Aku nggak minta balas cepat tapi kasih tahu dulu udah pulang.",
+          "anisa_clean": "Pergi ke mana? Aku nggak minta balas cepat tapi kasih tahu dulu udah pulang.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 3,
+          "user": "kamu cemburu ya?",
+          "anisa_raw": "Siapa juga yang cemburu.",
+          "anisa_clean": "Siapa juga yang cemburu.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 4: Respon Provokasi Dingin / Singkat",
+      "chat_id": 99004,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "y",
+          "anisa_raw": "Yaudah kalau gitu aku nggak ganggu.",
+          "anisa_clean": "Yaudah kalau gitu aku nggak ganggu.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "terserah",
+          "anisa_raw": "Nggak kenapa-kenapa.",
+          "anisa_clean": "Nggak kenapa-kenapa.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 3,
+          "user": "bodo amat",
+          "anisa_raw": "Geer banget sih kamu.",
+          "anisa_clean": "Geer banget sih kamu.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 5: Afeksi, Manja & Kangen",
+      "chat_id": 99005,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "kangen deh sama kamu",
+          "anisa_raw": "Beneran kangen ya? Aku cuma nanya kok. Jangan geer dulu.",
+          "anisa_clean": "Beneran kangen ya? Aku cuma nanya kok. Jangan geer dulu.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "kamu lagi apa sekarang?",
+          "anisa_raw": "Sedikit tidur sana, baru bangun dulur jam segini.",
+          "anisa_clean": "Sedikit tidur sana, baru bangun dulur jam segini.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 3,
+          "user": "sayang kamu banyak-banyak",
+          "anisa_raw": "Aku nggak bilang aku pacar sih! 😏",
+          "anisa_clean": "Aku nggak bilang aku pacar sih! 😏",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 6: Kehujanan & Sakit Masuk Angin",
+      "chat_id": 99006,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "tadi kehujanan di jalan pas pulang kerja",
+          "anisa_raw": "Pergi ke mana? Langsung mulai ngabarin aja kalau udah sampai situasinya kayak gini.",
+          "anisa_clean": "Pergi ke mana? Langsung mulai ngabarin aja kalau udah sampai situasinya kayak gini.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "dingin banget menggigil nih",
+          "anisa_raw": "Sedikit air dingin jangan dipendem doang, langsung minum segelas dulu. Jangan begadang mikir apa-apa.",
+          "anisa_clean": "Sedikit air dingin jangan dipendem doang, langsung minum segelas dulu. Jangan begadang mikir apa-apa.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 7: Candaan Menuduh Cerewet",
+      "chat_id": 99007,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "kamu cerewet banget deh hari ini",
+          "anisa_raw": "Ya... aku kesel. Tapi kalau iya gitu jangan nyesel ya.",
+          "anisa_clean": "Ya... aku kesel. Tapi kalau iya gitu jangan nyesel ya.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "galak amat sih",
+          "anisa_raw": "Emang kenapa kalau cerewet? Cerita dulu sama aku.",
+          "anisa_clean": "Emang kenapa kalau cerewet? Cerita dulu sama aku.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 8: Posisi & Keberadaan",
+      "chat_id": 99008,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "kamu lagi di mana nis?",
+          "anisa_raw": "Lagi asrama kok, kenapa? Mau ngambek dulu sana ya.",
+          "anisa_clean": "Lagi asrama kok, kenapa? Mau ngambek dulu sana ya.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "aku baru sampai rumah nih",
+          "anisa_raw": "Baru inget aku?",
+          "anisa_clean": "Baru inget aku?",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 9: Klarifikasi HP Mati",
+      "chat_id": 99009,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "HP-ku tadi mati total kehabisan baterai",
+          "anisa_raw": "Yaudah... Iya. Langsung nyalain ya.",
+          "anisa_clean": "Yaudah... Iya. Langsung nyalain ya.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "beneran mati kok, nggak bohong",
+          "anisa_raw": "Aku cuma nanya. Jangan geer dulu.",
+          "anisa_clean": "Aku cuma nanya. Jangan geer dulu.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    },
+    {
+      "scenario_title": "Skenario 10: Kontrol Negatif (0% Kayu & 0% Robot)",
+      "chat_id": 99010,
+      "dialogue": [
+        {
+          "turn": 1,
+          "user": "tadi aku beli perabot baru buat kamar",
+          "anisa_raw": "Yaudah! Langsung dibersihkan ya. Jangan sampai ngilang sama barang-barangnya lagi.",
+          "anisa_clean": "Yaudah! Langsung dibersihkan ya. Jangan sampai ngilang sama barang-barangnya lagi.",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        },
+        {
+          "turn": 2,
+          "user": "bagus nggak menurut kamu?",
+          "anisa_raw": "Baru inget aku dulu?",
+          "anisa_clean": "Baru inget aku dulu?",
+          "has_wood": false,
+          "has_robot": false,
+          "is_tumben": false
+        }
+      ]
+    }
+  ]
+}
