@@ -1,0 +1,51 @@
+# Android / Gradle
+.gradle/
+local.properties
+.idea/
+*.iml
+build/
+**/build/
+.externalNativeBuild/
+.cxx/
+
+# Native build outputs
+*.so
+*.a
+
+# Model weights / adapters
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.tflite
+*.litertlm
+models/cache/
+models/local/
+
+# Training outputs
+outputs/
+runs/
+checkpoints/
+wandb/
+
+# Private/local data
+data/private/
+data/raw-private/
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated artifacts
+*.apk
+*.aab
+*.apks
+*.zip
+reports/local/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
