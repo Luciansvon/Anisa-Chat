@@ -1,17 +1,19 @@
 package com.luciansvon.anisachat.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.luciansvon.anisachat.chat.ChatOrchestrator
 import com.luciansvon.anisachat.chat.DeterministicRouter
 import com.luciansvon.anisachat.chat.SystemContextBuilder
-import com.luciansvon.anisachat.data.InMemoryConversationStateStore
+import com.luciansvon.anisachat.data.RoomConversationStateStore
+import com.luciansvon.anisachat.data.local.AnisaDatabase
 import com.luciansvon.anisachat.domain.ChatMessage
 import com.luciansvon.anisachat.domain.MessageRole
 import com.luciansvon.anisachat.emotion.EmotionEngine
 import com.luciansvon.anisachat.inference.DevelopmentInferenceRuntime
 import com.luciansvon.anisachat.inference.ModelSessionManager
-import com.luciansvon.anisachat.memory.InMemoryMemoryRepository
+import com.luciansvon.anisachat.memory.RoomMemoryRepository
 import com.luciansvon.anisachat.time.TimeContextEngine
 import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val input: String = "",
@@ -27,15 +30,20 @@ data class ChatUiState(
     val debugEvent: String? = null,
 )
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
+    private val database = AnisaDatabase.open(application)
+    private val store = RoomConversationStateStore(database.dao())
+    private val memoryRepository = RoomMemoryRepository(database.dao())
     private val runtime = DevelopmentInferenceRuntime()
     private val session = ModelSessionManager(
         runtime = runtime,
         scope = viewModelScope,
     )
     private val orchestrator = ChatOrchestrator(
-        store = InMemoryConversationStateStore(),
-        memoryRepository = InMemoryMemoryRepository(),
+        store = store,
+        memoryRepository = memoryRepository,
         timeEngine = TimeContextEngine(),
         emotionEngine = EmotionEngine(),
         deterministicRouter = DeterministicRouter(),
@@ -45,6 +53,25 @@ class ChatViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            runCatching { store.recentMessages(UI_HISTORY_LIMIT) }
+                .onSuccess { messages ->
+                    _uiState.update {
+                        it.copy(
+                            messages = messages,
+                            debugEvent = if (messages.isEmpty()) null else "storage:restored",
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(debugEvent = "storage-error:${error::class.simpleName}")
+                    }
+                }
+        }
+    }
 
     fun onInputChanged(value: String) {
         _uiState.update { it.copy(input = value) }
@@ -98,5 +125,9 @@ class ChatViewModel : ViewModel() {
             session.unloadNow()
         }
         super.onCleared()
+    }
+
+    private companion object {
+        const val UI_HISTORY_LIMIT = 100
     }
 }

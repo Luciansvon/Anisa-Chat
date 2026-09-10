@@ -64,6 +64,14 @@ class ChatOrchestrator(
             createdAt = time.now,
         )
         val contextMessages = (previous.recentMessages + userMessage).takeLast(MAX_CONTEXT_MESSAGES)
+        val afterUser = previous.copy(
+            lastUserMessageAt = time.now,
+            emotion = transition.emotion,
+            relationship = transition.relationship,
+            recentMessages = contextMessages,
+        )
+
+        store.write(afterUser)
 
         val deterministicReply = deterministicRouter.tryAnswer(
             userText = text,
@@ -100,11 +108,8 @@ class ChatOrchestrator(
         )
 
         store.write(
-            previous.copy(
-                lastUserMessageAt = time.now,
+            afterUser.copy(
                 lastAssistantMessageAt = time.now,
-                emotion = transition.emotion,
-                relationship = transition.relationship,
                 recentMessages = (contextMessages + assistantMessage).takeLast(MAX_CONTEXT_MESSAGES),
             ),
         )

@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -11,8 +12,8 @@ android {
         applicationId = "com.luciansvon.anisachat"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-dev"
+        versionCode = 2
+        versionName = "0.2.0-dev"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,8 +39,13 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2026.06.00")
+    val roomVersion = "2.8.4"
 
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -51,7 +57,11 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    implementation("androidx.room:room-runtime:$roomVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    ksp("androidx.room:room-compiler:$roomVersion")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 

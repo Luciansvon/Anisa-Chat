@@ -2,6 +2,7 @@ package com.luciansvon.anisachat.chat
 
 import com.luciansvon.anisachat.data.InMemoryConversationStateStore
 import com.luciansvon.anisachat.domain.ConversationState
+import com.luciansvon.anisachat.domain.MessageRole
 import com.luciansvon.anisachat.emotion.EmotionEngine
 import com.luciansvon.anisachat.inference.InferenceRequest
 import com.luciansvon.anisachat.inference.InferenceRuntime
@@ -12,9 +13,11 @@ import java.time.Clock
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ChatOrchestratorTest {
@@ -60,9 +63,30 @@ class ChatOrchestratorTest {
         assertEquals("model-reply", result.reply)
     }
 
+    @Test
+    fun `user turn remains persisted when generation fails`() = runTest {
+        val now = localTime(17, 0)
+        val store = InMemoryConversationStateStore()
+        val orchestrator = buildOrchestrator(
+            store = store,
+            runtime = FailingRuntime(),
+            clock = Clock.fixed(now.toInstant(), jakarta),
+            scope = this,
+        )
+
+        runCatching { orchestrator.send("pesan yang jangan sampai hilang") }
+
+        val persisted = store.read()
+        assertNotNull(persisted.lastUserMessageAt)
+        assertNull(persisted.lastAssistantMessageAt)
+        assertEquals(1, persisted.recentMessages.size)
+        assertEquals(MessageRole.USER, persisted.recentMessages.single().role)
+        assertEquals("pesan yang jangan sampai hilang", persisted.recentMessages.single().content)
+    }
+
     private fun buildOrchestrator(
         store: InMemoryConversationStateStore,
-        runtime: CountingRuntime,
+        runtime: InferenceRuntime,
         clock: Clock,
         scope: kotlinx.coroutines.CoroutineScope,
     ) = ChatOrchestrator(
@@ -88,6 +112,22 @@ class ChatOrchestratorTest {
         }
 
         override suspend fun generate(request: InferenceRequest): String = "model-reply"
+
+        override suspend fun unload() {
+            isLoaded = false
+        }
+    }
+
+    private class FailingRuntime : InferenceRuntime {
+        override var isLoaded: Boolean = false
+
+        override suspend fun load() {
+            isLoaded = true
+        }
+
+        override suspend fun generate(request: InferenceRequest): String {
+            error("synthetic generation failure")
+        }
 
         override suspend fun unload() {
             isLoaded = false

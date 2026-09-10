@@ -1,6 +1,7 @@
 package com.luciansvon.anisachat.domain
 
 import java.time.Instant
+import java.util.UUID
 
 enum class MessageRole {
     USER,
@@ -11,6 +12,7 @@ data class ChatMessage(
     val role: MessageRole,
     val content: String,
     val createdAt: Instant,
+    val id: String = UUID.randomUUID().toString(),
 )
 
 data class PersonaProfile(
