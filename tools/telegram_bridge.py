@@ -7,9 +7,23 @@ import logging
 import socket
 import requests
 import torch
-from dotenv import load_dotenv
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
+
+# Pembaca .env bawaan tanpa library eksternal
+def load_simple_env(env_path=".env"):
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    k = k.strip()
+                    v = v.strip().strip("'\"")
+                    if k not in os.environ:
+                        os.environ[k] = v
+
+load_simple_env()
 
 # Pastikan koneksi jaringan Telegram menggunakan IPv4 stabil
 orig_getaddrinfo = socket.getaddrinfo
@@ -21,7 +35,7 @@ socket.getaddrinfo = getaddrinfo_ipv4
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Konfigurasi logging yang aman
+# Konfigurasi logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -30,8 +44,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger("AnisaTelegramBridge")
 
-# Muat konfigurasi dari .env
-load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 BASE_MODEL_PATH = os.getenv(
     "QWEN_MODEL_PATH",
