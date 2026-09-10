@@ -17,6 +17,7 @@ data class ChatResult(
     val reply: String,
     val timeContext: TimeContext,
     val event: InteractionEvent,
+    val usedModel: Boolean,
 )
 
 class ChatOrchestrator(
@@ -24,6 +25,7 @@ class ChatOrchestrator(
     private val memoryRepository: MemoryRepository,
     private val timeEngine: TimeContextEngine,
     private val emotionEngine: EmotionEngine,
+    private val deterministicRouter: DeterministicRouter,
     private val contextBuilder: SystemContextBuilder,
     private val modelSession: ModelSessionManager,
     private val persona: PersonaProfile = DefaultPersona.Anisa,
@@ -61,26 +63,35 @@ class ChatOrchestrator(
             content = text.trim(),
             createdAt = time.now,
         )
-
-        val memories = memoryRepository
-            .search(text, limit = MAX_MEMORY_ITEMS)
-            .map { it.text }
-
         val contextMessages = (previous.recentMessages + userMessage).takeLast(MAX_CONTEXT_MESSAGES)
-        val systemContext = contextBuilder.build(
-            persona = persona,
-            emotion = transition.emotion,
-            relationship = transition.relationship,
+
+        val deterministicReply = deterministicRouter.tryAnswer(
+            userText = text,
             time = time,
-            memories = memories,
+            emotion = transition.emotion,
         )
 
-        val reply = modelSession.generate(
-            InferenceRequest(
-                systemContext = systemContext,
-                messages = contextMessages,
-            ),
-        ).trim()
+        val usedModel = deterministicReply == null
+        val reply = deterministicReply ?: run {
+            val memories = memoryRepository
+                .search(text, limit = MAX_MEMORY_ITEMS)
+                .map { it.text }
+
+            val systemContext = contextBuilder.build(
+                persona = persona,
+                emotion = transition.emotion,
+                relationship = transition.relationship,
+                time = time,
+                memories = memories,
+            )
+
+            modelSession.generate(
+                InferenceRequest(
+                    systemContext = systemContext,
+                    messages = contextMessages,
+                ),
+            ).trim()
+        }
 
         val assistantMessage = ChatMessage(
             role = MessageRole.ASSISTANT,
@@ -102,6 +113,7 @@ class ChatOrchestrator(
             reply = reply,
             timeContext = time,
             event = if (followUpEvent != InteractionEvent.None) followUpEvent else timeEvent,
+            usedModel = usedModel,
         )
     }
 
