@@ -19,6 +19,9 @@
   7. **Disiplin Efisiensi Ruang Disk (Anti-Penumpukan Model)**: Dilarang men-download model dasar berukuran besar baru secara berulang; selalu gunakan bobot yang sudah ada di cache lokal. Bersihkan adapter dan file checkpoint eksperimen lama yang sudah ditinggalkan agar disk Drive C tidak pernah penuh.
   8. **Format Rapor Ramah Non-Coder**: Laporan atau rapor hasil perkembangan model wajib dibuat dengan format yang sangat mudah dipahami oleh Mas Bima (tanpa istilah teknis/koding yang rumit, menggunakan analogi sederhana, penilaian seperti rapor sekolah/game, dan tabel contoh jawaban nyata yang langsung terasa perbedaannya).
   9. **Disiplin Rekam Jejak Git Push (B.I.M.A-DEV-INFRA)**: Setiap kali proses pelatihan dan evaluasi selesai, seluruh berkas pencatatan (log JSONL, laporan evaluasi, buku rapor, dan walkthrough) wajib di-commit dan di-push ke GitHub sebagai bukti rekam jejak (*evidence trail*) yang transparan, dengan tetap menjaga agar file bobot biner besar (.safetensors/.gguf) tidak ikut ter-push.
+  10. **Alur Uji Anti-Halu Mas Bima (*Direct Verification Loop*)**:
+      - Wajib menggunakan siklus iteratif: **Langsung test sendiri > Baca output aktual > Analisa halu/keanehan > Rumuskan solusi > Terapkan fix**.
+      - Dilarang hanya mengandalkan metrik angka otomatis / skor kelulusan di atas kertas. Wajib membaca teks jawaban nyata yang dihasilkan terhadap chat santai sehari-hari (*"nis apa kabar"*, *"kamu lagi apa"*, respon pendek *"hah"*).
 - **Strategi Pengujian Awal**:
   - Pengujian respons dan kepribadian Anisa dilakukan langsung di laptop lokal Mas Bima terlebih dahulu.
   - Antarmuka pengujian dihubungkan ke **Telegram Bot** sehingga Mas Bima bisa langsung mengobrol dengan nyaman lewat aplikasi Telegram.

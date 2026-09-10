@@ -52,7 +52,7 @@ BASE_MODEL_PATH = os.getenv(
 )
 ADAPTER_PATH = os.getenv(
     "ANISA_ADAPTER_PATH",
-    "c:/Users/shint/Projects/Anisa-chat/models/adapters/anisa-qwen2b-master-v1"
+    "c:/Users/shint/Projects/Anisa-chat/models/adapters/anisa-qwen2b-natural-v1"
 )
 
 if not BOT_TOKEN or BOT_TOKEN == "masukkan_token_bot_disini":
