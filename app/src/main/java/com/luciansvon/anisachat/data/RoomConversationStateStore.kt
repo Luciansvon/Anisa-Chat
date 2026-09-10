@@ -50,7 +50,7 @@ class RoomConversationStateStore(
                 affection = relationship.affection,
                 unresolvedAbsence = relationship.unresolvedAbsence,
             ),
-            messages = state.recentMessages.map(ChatMessage::toEntity),
+            messages = state.recentMessages.map { message -> message.toEntity() },
         )
     }
 
@@ -60,7 +60,7 @@ class RoomConversationStateStore(
         return dao
             .readRecentMessagesDescending(limit.coerceAtMost(MAX_HISTORY_READ))
             .asReversed()
-            .mapNotNull(MessageEntity::toDomainOrNull)
+            .mapNotNull { entity -> entity.toDomainOrNull() }
     }
 
     private fun EmotionStateEntity.toDomain() = EmotionState(
