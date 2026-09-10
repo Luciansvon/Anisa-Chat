@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import json
 import time
 import datetime
 import logging
@@ -180,6 +181,7 @@ def clean_anisa_output(text):
 def generate_anisa_reply(chat_id, user_message):
     session = get_session(chat_id)
     session["last_active"] = datetime.datetime.now()
+    t_start = time.perf_counter()
     
     # Deteksi memori santai
     lower_msg = user_message.lower()
@@ -212,12 +214,27 @@ def generate_anisa_reply(chat_id, user_message):
             repetition_penalty=1.15
         )
 
+    dur = time.perf_counter() - t_start
     gen_tokens = outputs[0][inputs["input_ids"].shape[1]:]
     raw_reply = tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
     reply = clean_anisa_output(raw_reply)
 
     session["history"].append({"role": "user", "content": user_message})
     session["history"].append({"role": "assistant", "content": reply})
+
+    # Telemetri audit performa anonim (tanpa data privat user/chat_id)
+    try:
+        os.makedirs("reports", exist_ok=True)
+        telemetry_entry = {
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "latency_sec": round(dur, 2),
+            "tokens_gen": len(gen_tokens),
+            "chars_len": len(reply)
+        }
+        with open("reports/telegram_telemetry.jsonl", "a", encoding="utf-8") as tf:
+            tf.write(json.dumps(telemetry_entry) + "\n")
+    except Exception:
+        pass
 
     return reply
 

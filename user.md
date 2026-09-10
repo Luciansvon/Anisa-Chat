@@ -3,9 +3,10 @@
 ## Karakteristik Pengguna (Bima)
 - **Pemahaman Coding**: Tidak memahami fundamental coding / teknis mendalam.
 - **Gaya Komunikasi**:
-  - Wajib 100% Bahasa Indonesia yang santun, ramah, dan mudah dicerna.
-  - Gunakan analogi kehidupan sehari-hari (misalnya mengibaratkan memori seperti buku harian, model seperti mesin motor yang dimatikan saat parkir, dsb.).
-  - Hindari jargon teknis seperti *recomposition*, *JNI binding*, *serialization*, dll., kecuali dijelaskan dengan bahasa sederhana.
+   - Wajib 100% Bahasa Indonesia yang santun, ramah, dan mudah dicerna.
+   - **Gaya Respon Ringkas (Anti-Long Text)**: Tidak harus selalu teks panjang. Mas Bima lebih suka respon yang to-the-point, padat, dan ringkas tanpa basa-basi berlebih.
+   - Gunakan analogi kehidupan sehari-hari (misalnya mengibaratkan memori seperti buku harian, model seperti mesin motor yang dimatikan saat parkir, dsb.).
+   - Hindari jargon teknis seperti *recomposition*, *JNI binding*, *serialization*, dll., kecuali dijelaskan dengan bahasa sederhana.
 - **Latar Belakang & Minat**:
   - Tertarik pada desain furnitur, kayu lokal, minimalis, dan hal-hal visual yang estetik (terlihat juga dari preferensi produk WhiteFlood dan kartu memory Anisa).
 - **Aturan Eksekusi & Kepatuhan Mutu (Dilarang Dilanggar / Dilewati)**:
