@@ -32,12 +32,12 @@ jobs:
         with:
           gradle-version: '9.6.0'
 
-      - name: Ensure Android API 37
+      - name: Ensure Android API 36
         shell: bash
         run: |
           SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
           test -x "$SDKMANAGER"
-          yes | "$SDKMANAGER" "platforms;android-37" "build-tools;36.0.0" >/dev/null || test ${PIPESTATUS[1]} -eq 0
+          yes | "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" >/dev/null || test ${PIPESTATUS[1]} -eq 0
 
       - name: Unit test and assemble debug
         run: gradle :app:testDebugUnitTest :app:assembleDebug --stacktrace
