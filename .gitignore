@@ -24,6 +24,9 @@ build/
 *.litertlm
 models/cache/
 models/local/
+models/adapters/
+unsloth_compiled_cache/
+data/ANISA_DATASET_10_BATCHES_v0.3-v1.2/
 
 # Training outputs
 outputs/
@@ -32,11 +35,17 @@ checkpoints/
 wandb/
 
 # Private/local data
+.env
+*.env
+.venv/
+venv/
 data/private/
+
 data/raw-private/
 *.db
 *.sqlite
 *.sqlite3
+
 
 # Generated artifacts
 *.apk
