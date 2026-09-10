@@ -1,0 +1,31 @@
+version: '3'
+
+output: prefixed
+
+vars:
+  GRADLE: '{{default "gradle" .GRADLE}}'
+
+tasks:
+  default:
+    desc: List deterministic project commands
+    cmds:
+      - task --list
+
+  test:
+    desc: Run Android JVM unit tests
+    cmds:
+      - '"{{.GRADLE}}" :app:testDebugUnitTest --stacktrace'
+    timeout: 10m
+
+  build:
+    desc: Build the debug APK
+    cmds:
+      - '"{{.GRADLE}}" :app:assembleDebug --stacktrace'
+    timeout: 15m
+
+  check:
+    desc: Run current Anisa-Chat verification
+    cmds:
+      - task: test
+      - task: build
+    timeout: 20m
