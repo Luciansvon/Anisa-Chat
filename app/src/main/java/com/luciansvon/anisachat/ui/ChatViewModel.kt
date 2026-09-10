@@ -10,6 +10,7 @@ import com.luciansvon.anisachat.domain.MessageRole
 import com.luciansvon.anisachat.emotion.EmotionEngine
 import com.luciansvon.anisachat.inference.DevelopmentInferenceRuntime
 import com.luciansvon.anisachat.inference.ModelSessionManager
+import com.luciansvon.anisachat.memory.InMemoryMemoryRepository
 import com.luciansvon.anisachat.time.TimeContextEngine
 import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +34,7 @@ class ChatViewModel : ViewModel() {
     )
     private val orchestrator = ChatOrchestrator(
         store = InMemoryConversationStateStore(),
+        memoryRepository = InMemoryMemoryRepository(),
         timeEngine = TimeContextEngine(),
         emotionEngine = EmotionEngine(),
         contextBuilder = SystemContextBuilder(),
