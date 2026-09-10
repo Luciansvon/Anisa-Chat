@@ -36,16 +36,27 @@ socket.getaddrinfo = getaddrinfo_ipv4
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Konfigurasi logging
+os.makedirs("reports", exist_ok=True)
+# Konfigurasi logging ke konsol dan berkas reports/telegram_bridge.log
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%H:%M:%S",
-    handlers=[logging.StreamHandler(sys.stdout)]
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler("reports/telegram_bridge.log", encoding="utf-8")
+    ]
 )
 logger = logging.getLogger("AnisaTelegramBridge")
 
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+# Dukungan Bot Ganda: @Anisa_chat_bot dan @Anisa_Bima_bot
+PRIMARY_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8835055437:AAG4jQF8QZKasmL3BmEtAQwy1hC0z8kVvrI")
+SECONDARY_TOKEN = "8290695399:AAHNba-2JFb524Dtv_69P-zQHLSspGlfl2M"
+BOT_CONFIGS = [
+    {"name": "@Anisa_chat_bot", "token": PRIMARY_TOKEN, "offset": None},
+    {"name": "@Anisa_Bima_bot", "token": SECONDARY_TOKEN, "offset": None}
+]
+
 BASE_MODEL_PATH = os.getenv(
     "QWEN_MODEL_PATH",
     "C:/Users/shint/.cache/huggingface/hub/models--empero-ai--Qwen3.8-2B-Distill/snapshots/e37a2dc4acc68ad75a91e07e63168cb04cc06345"
@@ -54,12 +65,6 @@ ADAPTER_PATH = os.getenv(
     "ANISA_ADAPTER_PATH",
     "c:/Users/shint/Projects/Anisa-chat/models/adapters/anisa-qwen2b-natural-v2"
 )
-
-if not BOT_TOKEN or BOT_TOKEN == "masukkan_token_bot_disini":
-    logger.error("Token bot belum diisi di berkas .env!")
-    sys.exit(1)
-
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 # Siapkan sesi requests dengan User-Agent agar stabil
 session_http = requests.Session()
@@ -144,16 +149,16 @@ def build_system_context(session):
         f"Hal yang kamu ingat tentang Mas Bima: {memori_teks}."
     )
 
-def send_chat_action(chat_id, action="typing"):
+def send_chat_action(token, chat_id, action="typing"):
     try:
-        session_http.post(f"{TELEGRAM_API_URL}/sendChatAction", json={"chat_id": chat_id, "action": action}, timeout=8)
+        session_http.post(f"https://api.telegram.org/bot{token}/sendChatAction", json={"chat_id": chat_id, "action": action}, timeout=8)
     except Exception:
         pass
 
-def send_message(chat_id, text):
+def send_message(token, chat_id, text):
     try:
         resp = session_http.post(
-            f"{TELEGRAM_API_URL}/sendMessage",
+            f"https://api.telegram.org/bot{token}/sendMessage",
             json={
                 "chat_id": chat_id,
                 "text": text,
@@ -164,7 +169,7 @@ def send_message(chat_id, text):
         if not resp.json().get("ok"):
             # Fallback tanpa format markdown
             session_http.post(
-                f"{TELEGRAM_API_URL}/sendMessage",
+                f"https://api.telegram.org/bot{token}/sendMessage",
                 json={"chat_id": chat_id, "text": text},
                 timeout=12
             )
@@ -186,7 +191,7 @@ def clean_anisa_output(text):
         cleaned = cleaned[0].upper() + cleaned[1:]
     return cleaned
 
-def generate_anisa_reply(chat_id, user_message):
+def generate_anisa_reply(chat_id, user_message, bot_token=None):
     session = get_session(chat_id)
     session["last_active"] = datetime.datetime.now()
     t_start = time.perf_counter()
@@ -210,7 +215,8 @@ def generate_anisa_reply(chat_id, user_message):
     prompt_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt_text, return_tensors="pt").to(0 if device == "cuda" else "cpu")
     
-    send_chat_action(chat_id, "typing")
+    if bot_token:
+        send_chat_action(bot_token, chat_id, "typing")
 
     with torch.no_grad():
         outputs = model.generate(
@@ -247,90 +253,98 @@ def generate_anisa_reply(chat_id, user_message):
     return reply
 
 def run_bot():
-    logger.info("Memulai layanan Bot Telegram Anisa Master...")
-    bot_info = None
-    for attempt in range(5):
+    logger.info("Memulai layanan Bot Telegram Anisa Natural v2...")
+    
+    # Cek status kedua bot
+    for bcfg in BOT_CONFIGS:
+        tok = bcfg["token"]
         try:
-            me_resp = session_http.get(f"{TELEGRAM_API_URL}/getMe", timeout=12).json()
+            me_resp = session_http.get(f"https://api.telegram.org/bot{tok}/getMe", timeout=10).json()
             if me_resp.get("ok"):
-                bot_info = me_resp["result"]
-                logger.info(f"Bot Aktif: {bot_info.get('first_name')} (@{bot_info.get('username')})")
-                break
+                info = me_resp["result"]
+                logger.info(f"Bot Terhubung: {info.get('first_name')} (@{info.get('username')})")
             else:
-                logger.error(f"Gagal mendapatkan info bot: {me_resp}")
-                time.sleep(2)
+                logger.warning(f"Bot {bcfg['name']} tidak dapat dihubungi: {me_resp}")
         except Exception as e:
-            logger.warning(f"Koneksi awal ke Telegram (percobaan {attempt+1}/5) tertunda: {e}")
-            time.sleep(3)
+            logger.warning(f"Koneksi awal {bcfg['name']} tertunda: {e}")
 
-    if not bot_info:
-        logger.error("Tidak dapat menghubungi server Telegram. Periksa koneksi internet.")
-        return
+    # Kirim salam keaktifan langsung ke Telegram Mas Bima
+    mas_bima_chat_id = 5497600429
+    startup_msg = "Hai Mas Bima! Anisa sudah aktif kembali dan siap ngobrol di sini ya. ❤️"
+    for bcfg in BOT_CONFIGS:
+        try:
+            send_message(bcfg["token"], mas_bima_chat_id, startup_msg)
+        except Exception:
+            pass
 
-    offset = None
-    logger.info("Anisa Master siap mengobrol dengan Mas Bima di Telegram!")
+    logger.info("Anisa Natural v2 siap mengobrol dengan Mas Bima di kedua bot Telegram!")
     print("\n" + "="*50)
-    print(" ANISA MASTER TELEGRAM BOT AKTIF & SIAP MENGOBROL")
+    print(" ANISA NATURAL v2 BOT AKTIF & SIAP MENGOBROL")
     print(" Buka Telegram dan kirim pesan ke bot Anda sekarang!")
     print("="*50 + "\n", flush=True)
 
     while True:
         try:
-            params = {"timeout": 20}
-            if offset is not None:
-                params["offset"] = offset
+            for bcfg in BOT_CONFIGS:
+                tok = bcfg["token"]
+                name = bcfg["name"]
+                params = {"timeout": 3}
+                if bcfg["offset"] is not None:
+                    params["offset"] = bcfg["offset"]
 
-            resp = session_http.get(f"{TELEGRAM_API_URL}/getUpdates", params=params, timeout=25)
-            data = resp.json()
-
-            if not data.get("ok"):
-                time.sleep(2)
-                continue
-
-            for update in data.get("result", []):
-                offset = update["update_id"] + 1
-                message = update.get("message")
-                if not message or "text" not in message:
+                try:
+                    resp = session_http.get(f"https://api.telegram.org/bot{tok}/getUpdates", params=params, timeout=6)
+                    data = resp.json()
+                except Exception:
                     continue
 
-                chat_id = message["chat"]["id"]
-                user_text = message["text"].strip()
-                sender_name = message["from"].get("first_name", "BuBaCo")
-
-                logger.info(f"Pesan dari {sender_name}: {user_text}")
-
-                if user_text.startswith("/start"):
-                    welcome_text = (
-                        f"Hai Mas Bima ({sender_name})! ❤️ Akhirnya nyariin aku juga.\n\n"
-                        "Dari tadi aku nungguin tau nggak? Kamu lagi di mana sekarang? Lagi sama siapa?"
-                    )
-                    send_message(chat_id, welcome_text)
+                if not data.get("ok"):
                     continue
 
-                if user_text.startswith("/status"):
-                    session = get_session(chat_id)
-                    status_text = (
-                        f"🌿 *Status Anisa Master*\n"
-                        f"• Suasana Hati: `{session['mood']}`\n"
-                        f"• Kebahagiaan: `{session['happiness']}%`\n"
-                        f"• Otak: `Qwen 2B Master v1 (QLoRA 4-bit)`\n"
-                        f"• Memori GPU: `Stabil Dingin`\n\n"
-                        f"_Siap mendengarkan Mas Bima kapan pun!_"
-                    )
-                    send_message(chat_id, status_text)
-                    continue
+                for update in data.get("result", []):
+                    bcfg["offset"] = update["update_id"] + 1
+                    message = update.get("message")
+                    if not message or "text" not in message:
+                        continue
 
-                if user_text.startswith("/reset"):
-                    user_sessions.pop(chat_id, None)
-                    send_message(chat_id, "Sesi obrolan kita sudah aku segarkan ya. Mau cerita apa sekarang?")
-                    continue
+                    chat_id = message["chat"]["id"]
+                    user_text = message["text"].strip()
+                    sender_name = message["from"].get("first_name", "BuBaCo")
 
-                reply = generate_anisa_reply(chat_id, user_text)
-                logger.info(f"Balasan Anisa: {reply}")
-                send_message(chat_id, reply)
+                    logger.info(f"[{name}] Pesan dari {sender_name}: {user_text}")
 
-        except requests.exceptions.RequestException:
-            time.sleep(3)
+                    if user_text.startswith("/start"):
+                        welcome_text = (
+                            f"Hai Mas Bima ({sender_name})! ❤️ Akhirnya nyariin aku juga.\n\n"
+                            "Dari tadi aku nungguin tau nggak? Kamu lagi di mana sekarang? Lagi sama siapa?"
+                        )
+                        send_message(tok, chat_id, welcome_text)
+                        continue
+
+                    if user_text.startswith("/status"):
+                        session = get_session(chat_id)
+                        status_text = (
+                            f"🌿 *Status Anisa Natural v2*\n"
+                            f"• Suasana Hati: `{session['mood']}`\n"
+                            f"• Kebahagiaan: `{session['happiness']}%`\n"
+                            f"• Otak: `Qwen 2B Natural v2 (LoRA 4-bit)`\n"
+                            f"• Memori GPU: `Stabil Dingin`\n\n"
+                            f"_Siap mendengarkan Mas Bima kapan pun!_"
+                        )
+                        send_message(tok, chat_id, status_text)
+                        continue
+
+                    if user_text.startswith("/reset"):
+                        user_sessions.pop(chat_id, None)
+                        send_message(tok, chat_id, "Sesi obrolan kita sudah aku segarkan ya. Mau cerita apa sekarang?")
+                        continue
+
+                    reply = generate_anisa_reply(chat_id, user_text, bot_token=tok)
+                    logger.info(f"[{name}] Balasan Anisa: {reply}")
+                    send_message(tok, chat_id, reply)
+
+            time.sleep(0.5)
+
         except KeyboardInterrupt:
             logger.info("Bot dihentikan.")
             break
