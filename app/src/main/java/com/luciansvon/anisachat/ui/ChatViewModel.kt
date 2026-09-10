@@ -3,6 +3,7 @@ package com.luciansvon.anisachat.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.luciansvon.anisachat.chat.ChatOrchestrator
+import com.luciansvon.anisachat.chat.DeterministicRouter
 import com.luciansvon.anisachat.chat.SystemContextBuilder
 import com.luciansvon.anisachat.data.InMemoryConversationStateStore
 import com.luciansvon.anisachat.domain.ChatMessage
@@ -37,6 +38,7 @@ class ChatViewModel : ViewModel() {
         memoryRepository = InMemoryMemoryRepository(),
         timeEngine = TimeContextEngine(),
         emotionEngine = EmotionEngine(),
+        deterministicRouter = DeterministicRouter(),
         contextBuilder = SystemContextBuilder(),
         modelSession = session,
     )
@@ -68,9 +70,10 @@ class ChatViewModel : ViewModel() {
             runCatching { orchestrator.send(text) }
                 .onSuccess { result ->
                     _uiState.update {
+                        val route = if (result.usedModel) "model" else "script"
                         it.copy(
                             isGenerating = false,
-                            debugEvent = result.event::class.simpleName,
+                            debugEvent = "$route:${result.event::class.simpleName}",
                             messages = it.messages + ChatMessage(
                                 role = MessageRole.ASSISTANT,
                                 content = result.reply,
