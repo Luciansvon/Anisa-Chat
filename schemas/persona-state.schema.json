@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anisa-chat.local/schemas/persona-state.schema.json",
+  "title": "Anisa Persona Runtime State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "persona", "relationship", "emotion", "time"],
+  "properties": {
+    "schema_version": {"const": "anisa.persona-state.v0"},
+    "persona": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "minLength": 1}
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["familiarity", "trust", "affection"],
+      "properties": {
+        "familiarity": {"type": "integer", "minimum": 0, "maximum": 100},
+        "trust": {"type": "integer", "minimum": 0, "maximum": 100},
+        "affection": {"type": "integer", "minimum": 0, "maximum": 100},
+        "unresolved_event": {"type": ["string", "null"]}
+      }
+    },
+    "emotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mood", "happiness", "irritation", "sadness", "energy"],
+      "properties": {
+        "mood": {"type": "string", "minLength": 1},
+        "happiness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "irritation": {"type": "integer", "minimum": 0, "maximum": 100},
+        "sadness": {"type": "integer", "minimum": 0, "maximum": 100},
+        "energy": {"type": "integer", "minimum": 0, "maximum": 100}
+      }
+    },
+    "time": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timezone", "current_local_time", "elapsed_seconds", "inactivity_bucket", "same_calendar_day", "daypart"],
+      "properties": {
+        "timezone": {"type": "string", "minLength": 1},
+        "current_local_time": {"type": "string", "format": "date-time"},
+        "elapsed_seconds": {"type": "integer", "minimum": 0},
+        "inactivity_bucket": {
+          "enum": ["continuous", "short_gap", "medium_gap", "long_gap", "very_long_gap", "unknown"]
+        },
+        "same_calendar_day": {"type": "boolean"},
+        "daypart": {"enum": ["morning", "afternoon", "evening", "night", "unknown"]},
+        "interaction_event": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
